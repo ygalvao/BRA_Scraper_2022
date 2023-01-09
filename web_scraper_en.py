@@ -143,6 +143,8 @@ def select_evm_and_download_files(driver:object, headless:bool, base_uri:str)->i
         element = None
         tries = 0
 
+        time.sleep(.5)
+
         while element is None:
             tries += 1
 
@@ -164,6 +166,8 @@ def select_evm_and_download_files(driver:object, headless:bool, base_uri:str)->i
         element = None
         tries = 0
 
+        time.sleep(1)
+
         while element is None:
             tries += 1
 
@@ -184,6 +188,8 @@ def select_evm_and_download_files(driver:object, headless:bool, base_uri:str)->i
 
         options = None
         tries = 0
+
+        time.sleep(1.5)
 
         while options is None:
             tries += 1
