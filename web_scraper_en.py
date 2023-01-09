@@ -19,7 +19,12 @@ from contextlib import contextmanager
 
 # Declaring some important variables, like the scope (Brazilian state), the log file name, and the basic configuration for the log system
 scope = input('Please, enter the name of the state for this instance of the web scraper (e.g. Rio de Janeiro): ').strip()
-log_file_name = scope.replace(' ', '_') + '.log'
+log_file_name = scope
+
+if confirm('Do you want to customize the name of the log file? [y/n] '):
+    log_file_name = input('Enter the name for the log file, without the extension: ')
+
+log_file_name = log_file_name.replace(' ', '_') + '.log'
 logging.basicConfig(
     filename='./logs/'+log_file_name,
     filemode='a',
@@ -126,7 +131,7 @@ def generator(list_:list):
 def select_evm_and_download_files(driver:object, headless:bool, base_uri:str, revert:bool)->int:
     """"""
 
-    def find_list_element(name:str)->object:
+    def find_list_element(name:str, formcontrolname:str)->object:
         """"""
 
         element = None
@@ -149,28 +154,13 @@ def select_evm_and_download_files(driver:object, headless:bool, base_uri:str, re
             else:
                 return element
 
-    def find_matselect_by_form_control_name(name:str)->object:
-        """"""
-
-        element = None
-        tries = 0
-
-        time.sleep(1)
-
-        while element is None:
-            tries += 1
-
-            if tries == 51:
-                critical_error(f'Element {name} not found! Stopping trying after 50 tries.')
-                raise Exception("Too many tries!")
-
-            try:
-                element = WebDriverWait(driver, timeout=3).until(lambda x: x.find_element(by=By.XPATH, value=f'''//mat-select[@formcontrolname="{name}"]'''))
-            except:
-                error(f'Element {name} not found! trying again in one second.')
-                time.sleep(1)
-            else:
-                return element
+            if tries % 5 == 0:
+                try:
+                    select_element = WebDriverWait(driver, timeout=3).until(lambda x: x.find_element(by=By.XPATH, value=f'''//mat-select[@formcontrolname="{formcontrolname}"]'''))
+                    select_element.click()
+                except:
+                    error(f'Element {formcontrolname} not found!')
+                    time.sleep(1)
 
     def get_list_of_options(type_of_options:str)->list:
         """"""
@@ -195,6 +185,29 @@ def select_evm_and_download_files(driver:object, headless:bool, base_uri:str, re
             else:
                 return options
 
+    def find_matselect_by_form_control_name(name:str)->object:
+        """"""
+
+        element = None
+        tries = 0
+
+        time.sleep(1)
+
+        while element is None:
+            tries += 1
+
+            if tries == 51:
+                critical_error(f'Element {name} not found! Stopping trying after 50 tries.')
+                raise Exception("Too many tries!")
+
+            try:
+                element = WebDriverWait(driver, timeout=3).until(lambda x: x.find_element(by=By.XPATH, value=f'''//mat-select[@formcontrolname="{name}"]'''))
+            except:
+                error(f'Element {name} not found! trying again in one second.')
+                time.sleep(1)
+            else:
+                return element
+
     step_info = lambda x: info(f'{x} selected')
 
     #actions = ActionChains(driver)
@@ -206,7 +219,7 @@ def select_evm_and_download_files(driver:object, headless:bool, base_uri:str, re
     select_scopes.click()
 
     time.sleep(1.5)
-    scope_object = find_list_element(scope)
+    scope_object = find_list_element(scope, 'uf')
     scope_object.click()
     step_info(scope)
 
@@ -228,7 +241,7 @@ def select_evm_and_download_files(driver:object, headless:bool, base_uri:str, re
                 select_scopes.click()
 
                 time.sleep(1.5)
-                scope_object = find_list_element(scope)
+                scope_object = find_list_element(scope, 'uf')
                 scope_object.click()
                 step_info(scope)
 
@@ -236,7 +249,7 @@ def select_evm_and_download_files(driver:object, headless:bool, base_uri:str, re
                 select_municipality = find_matselect_by_form_control_name('municipioBU')
                 select_municipality.click()
 
-            municipality_object = find_list_element(municipality)
+            municipality_object = find_list_element(municipality, 'municipioBU')
             municipality_object.click()
 
             step_info(municipality)
@@ -249,7 +262,7 @@ def select_evm_and_download_files(driver:object, headless:bool, base_uri:str, re
                 zones_length = len(zones)
                 zones = [zone.text for zone in zones]
                 for i_z, zone in enumerate(zones):
-                    zone_object = find_list_element(zone)
+                    zone_object = find_list_element(zone, 'zonaEleitoralBU')
                     zone_object.click()
 
                     step_info(zone)
@@ -262,7 +275,7 @@ def select_evm_and_download_files(driver:object, headless:bool, base_uri:str, re
                         sections_length = len(sections)
                         sections = [section.text for section in sections]
                         for i_s, section in enumerate(sections):
-                            section_object = find_list_element(section)
+                            section_object = find_list_element(section, 'secaoEleitoralBU')
                             #actions.move_to_element(section_).perform()
                             section_object.click()
 
@@ -304,7 +317,7 @@ def start()->None:
     base_uri = 'https://resultados.tse.jus.br/oficial/app/index.html#/divulga;e=545'
 
     headless = confirm('Do you want the browser to be "headless"? [y/n] ')
-    revert = confirm('Do you want to revert the order of the municipalities? [y/n] ')
+    revert = confirm('Do you want to reverse the order of the municipalities? [y/n] ')
 
     driver = get_page_ready(get_webdriver(headless), base_uri)
 
@@ -313,7 +326,6 @@ def start()->None:
     downloaded_total = select_evm_and_download_files(driver, headless, base_uri, revert)
 
     info(f'''Download complete! Files from {downloaded_total} EVM's from {scope} were downloaded.''')
-    driver.quit()
     info('End of the program. The web scraper will now close.')
 
 if __name__ == '__main__':
