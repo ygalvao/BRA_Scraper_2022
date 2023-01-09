@@ -9,7 +9,7 @@
 # Importing from modules / packages
 import time, logging
 from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support.select import Select
@@ -22,7 +22,7 @@ scope = input('Please, enter the name of the state for this instance of the web 
 log_file_name = scope.replace(' ', '_') + '.log'
 logging.basicConfig(
     filename='./logs/'+log_file_name,
-    filemode='w',
+    filemode='a',
     level=logging.INFO,
     format='%(asctime)s - %(message)s',
     datefmt='%Y-%m-%d %H:%M:%S'
@@ -36,33 +36,22 @@ critical_error = lambda x: logging.critical(x)
 def get_webdriver(headless:bool)->object:
     """"""
 
-    # Declaring some important variables for the Chrome Webdriver
-    linux_useragent = "Mozilla/5.0  (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36"
+    # Declaring some important variables for the Gecko Webdriver (Firefox)
     options = Options()
-    prefs = {
-        'profile.default_content_setting_values': {
-            'cookies': 2, 'images': 2, 'plugins': 2, 'popups': 2, 'geolocation': 2,
-            'notifications': 2, 'auto_select_certificate': 2, 'fullscreen': 2, 'mouselock': 2, 
-            'mixed_script': 2, 'media_stream': 2, 'media_stream_mic': 2, 'media_stream_camera': 2,
-            'protocol_handlers': 2, 'ppapi_broker': 2, 'automatic_downloads': 1, 'midi_sysex': 2,
-            'push_messaging': 2, 'ssl_cert_decisions': 2, 'metro_switch_to_desktop': 2, 
-            'protected_media_identifier': 2, 'app_banner': 2, 'site_engagement': 2, 'durable_storage': 2
-            },
-        'profile.default_content_settings.popups': 0,
-        'download.default_directory':'/home/yhgalvao/Desktop/AI/Notebooks/Brazil_2022_Elections/formato-arquivos-bu-rdv-ass-digital/BU_e_RDV', # Change this depending on your direcory configurations and preferences
-        'download.prompt_for_download': False,
-        'download.directory_upgrade': True
-            }
-    options.add_experimental_option('prefs', prefs)
+    #linux_useragent = "Mozilla/5.0  (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36"
+    options.set_preference("browser.download.folderList", 2)
+    options.set_preference("browser.download.manager.showWhenStarting", False)
+    options.set_preference("browser.download.dir", "/home/yhgalvao/Desktop/AI/Notebooks/Brazil_2022_Elections/formato-arquivos-bu-rdv-ass-digital/BU_e_RDV")
+    options.set_preference("browser.helperApps.neverAsk.saveToDisk", "application/x-gzip")
     options.add_argument('disable-infobars')
     options.add_argument('--disable-extensions')
-    options.add_argument(f'user-agent={linux_useragent}')
+    #options.add_argument(f'user-agent={linux_useragent}')
     options.add_argument('--no-sandbox')
 
     if headless is True:
         options.add_argument('--headless')
 
-    driver = webdriver.Chrome(options = options)
+    driver = webdriver.Firefox(options = options)
     driver.set_window_size(1920,1040)
 
     return driver
@@ -134,7 +123,7 @@ def generator(list_:list):
    
     yield list_
 
-def select_evm_and_download_files(driver:object, headless:bool, base_uri:str)->int:
+def select_evm_and_download_files(driver:object, headless:bool, base_uri:str, revert:bool)->int:
     """"""
 
     def find_list_element(name:str)->object:
@@ -228,6 +217,9 @@ def select_evm_and_download_files(driver:object, headless:bool, base_uri:str)->i
     with generator(get_list_of_options('municipalities')) as municipalities:
         municipalities_length = len(municipalities)
         municipalities = [municipality.text for municipality in municipalities]
+        if revert:
+            municipalities.reverse()
+
         for i_m, municipality in enumerate(municipalities):
             if i_m > 0:
                 driver = get_page_ready(get_webdriver(headless), base_uri)
@@ -311,13 +303,14 @@ def start()->None:
     # Declaring other variables and instantiating objects
     base_uri = 'https://resultados.tse.jus.br/oficial/app/index.html#/divulga;e=545'
 
-    headless = confirm('Do you want the browser to be "headless"? ')    
+    headless = confirm('Do you want the browser to be "headless"? [y/n] ')
+    revert = confirm('Do you want to revert the order of the municipalities? [y/n] ')
 
     driver = get_page_ready(get_webdriver(headless), base_uri)
 
     time.sleep(2)
 
-    downloaded_total = select_evm_and_download_files(driver, headless, base_uri)
+    downloaded_total = select_evm_and_download_files(driver, headless, base_uri, revert)
 
     info(f'''Download complete! Files from {downloaded_total} EVM's from {scope} were downloaded.''')
     driver.quit()
