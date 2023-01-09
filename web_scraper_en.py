@@ -13,9 +13,7 @@ from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support.select import Select
-from selenium.webdriver.common.action_chains import ActionChains
 from basic_functions_en import *
-from contextlib import contextmanager
 
 # Declaring some important variables, like the scope (Brazilian state), the log file name, and the basic configuration for the log system
 scope = input('Please, enter the name of the state for this instance of the web scraper (e.g. Rio de Janeiro): ').strip()
@@ -109,8 +107,8 @@ def get_page_ready(driver:object, base_uri:str)->None:
 def download_files(driver:object, count:int)->int:
     """"""
 
-    consult_button = WebDriverWait(driver, timeout=15).until(lambda x: x.find_element(by=By.XPATH, value=f'''//ion-button[@type="submit"]'''))
-    consult_button.click()
+    query_button = WebDriverWait(driver, timeout=15).until(lambda x: x.find_element(by=By.XPATH, value=f'''//ion-button[@type="submit"]'''))
+    query_button.click()
 
     time.sleep(1)
     all_files = WebDriverWait(driver, timeout=15).until(lambda x: x.find_element(by=By.XPATH, value=f'''//a[.="Todos Arquivos"]'''))
@@ -122,14 +120,62 @@ def download_files(driver:object, count:int)->int:
 
     return count
 
-@contextmanager # Defining a function that creates generators (and use them to iterate instead of lists of web elements) was one of the ways that I found to avoid memory leak
-def generator(list_:list):
-    """Creates a generator from a list"""
-   
-    yield list_
-
 def select_evm_and_download_files(driver:object, headless:bool, base_uri:str, revert:bool)->int:
     """"""
+
+    def find_matselect_by_form_control_name(name:str)->object:
+        """"""
+
+        element = None
+        tries = 0
+
+        time.sleep(1)
+
+        while element is None:
+            tries += 1
+
+            if tries == 51:
+                critical_error(f'Element {name} not found! Stopping trying after 50 tries.')
+                raise Exception("Too many tries!")
+
+            try:
+                element = WebDriverWait(driver, timeout=3).until(lambda x: x.find_element(by=By.XPATH, value=f'''//mat-select[@formcontrolname="{name}"]'''))
+            except:
+                error(f'Element {name} not found! trying again in one second.')
+                time.sleep(1)
+            else:
+                return element
+
+    def get_list_of_options(type_of_options:str, formcontrolname:str)->list:
+        """"""
+
+        options = None
+        tries = 0
+
+        time.sleep(1.5)
+
+        while options is None:
+            tries += 1
+
+            if tries == 50:
+                critical_error(f'List of {type_of_options} not found! Stopping trying after 5 tries.')
+                raise Exception("Too many tries!")
+
+            try:
+                options = WebDriverWait(driver, timeout=12).until(lambda x: x.find_elements(by=By.XPATH, value='''//div/mat-option/span[@class="mat-option-text"]'''))
+            except:
+                error(f'List of {type_of_options} not found! trying again in one second.')
+                time.sleep(1)
+            else:
+                return options
+
+            if tries % 5 == 0:
+                try:
+                    select_element = WebDriverWait(driver, timeout=3).until(lambda x: x.find_element(by=By.XPATH, value=f'''//mat-select[@formcontrolname="{formcontrolname}"]'''))
+                    select_element.click()
+                except:
+                    error(f'Element {formcontrolname} not found!')
+                    time.sleep(1)
 
     def find_list_element(name:str, formcontrolname:str)->object:
         """"""
@@ -162,55 +208,8 @@ def select_evm_and_download_files(driver:object, headless:bool, base_uri:str, re
                     error(f'Element {formcontrolname} not found!')
                     time.sleep(1)
 
-    def get_list_of_options(type_of_options:str)->list:
-        """"""
-
-        options = None
-        tries = 0
-
-        time.sleep(1.5)
-
-        while options is None:
-            tries += 1
-
-            if tries == 5:
-                critical_error(f'List of {type_of_options} not found! Stopping trying after 5 tries.')
-                raise Exception("Too many tries!")
-
-            try:
-                options = WebDriverWait(driver, timeout=12).until(lambda x: x.find_elements(by=By.XPATH, value='''//div/mat-option/span[@class="mat-option-text"]'''))
-            except:
-                error(f'List of {type_of_options} not found! trying again in one second.')
-                time.sleep(1)
-            else:
-                return options
-
-    def find_matselect_by_form_control_name(name:str)->object:
-        """"""
-
-        element = None
-        tries = 0
-
-        time.sleep(1)
-
-        while element is None:
-            tries += 1
-
-            if tries == 51:
-                critical_error(f'Element {name} not found! Stopping trying after 50 tries.')
-                raise Exception("Too many tries!")
-
-            try:
-                element = WebDriverWait(driver, timeout=3).until(lambda x: x.find_element(by=By.XPATH, value=f'''//mat-select[@formcontrolname="{name}"]'''))
-            except:
-                error(f'Element {name} not found! trying again in one second.')
-                time.sleep(1)
-            else:
-                return element
-
     step_info = lambda x: info(f'{x} selected')
 
-    #actions = ActionChains(driver)
     count = 0
 
     time.sleep(1.25)
@@ -227,7 +226,7 @@ def select_evm_and_download_files(driver:object, headless:bool, base_uri:str, re
     select_municipality = find_matselect_by_form_control_name('municipioBU')
     select_municipality.click()
 
-    with generator(get_list_of_options('municipalities')) as municipalities:
+    with generator(get_list_of_options('municipalities', 'municipioBU')) as municipalities:
         municipalities_length = len(municipalities)
         municipalities = [municipality.text for municipality in municipalities]
         if revert:
@@ -258,7 +257,7 @@ def select_evm_and_download_files(driver:object, headless:bool, base_uri:str, re
             select_zone = find_matselect_by_form_control_name('zonaEleitoralBU')
             select_zone.click()
 
-            with generator(get_list_of_options('zones')) as zones:
+            with generator(get_list_of_options('zones', 'zonaEleitoralBU')) as zones:
                 zones_length = len(zones)
                 zones = [zone.text for zone in zones]
                 for i_z, zone in enumerate(zones):
@@ -271,12 +270,11 @@ def select_evm_and_download_files(driver:object, headless:bool, base_uri:str, re
                     select_section = find_matselect_by_form_control_name('secaoEleitoralBU')
                     select_section.click()
 
-                    with generator(get_list_of_options('sections')) as sections:
+                    with generator(get_list_of_options('sections', 'secaoEleitoralBU')) as sections:
                         sections_length = len(sections)
                         sections = [section.text for section in sections]
                         for i_s, section in enumerate(sections):
                             section_object = find_list_element(section, 'secaoEleitoralBU')
-                            #actions.move_to_element(section_).perform()
                             section_object.click()
 
                             step_info(section)

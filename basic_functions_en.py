@@ -7,6 +7,7 @@
 #*******************************************************************************#
 
 import os, json, sys
+from contextlib import contextmanager
 
 args = sys.argv[1:] # List of arguments that were passed
 
@@ -58,3 +59,9 @@ def list_from_input(text:str)->list:
         final_list = [str(s) for s in raw_list.replace(' ', '').split(',')]
 
     return final_list
+
+@contextmanager # A function that creates generators (and use them to iterate instead of lists of web elements) was one of the ways that I found to prevent memory leak when unsing Selenium
+def generator(list_:list):
+    """Creates a generator from a list"""
+   
+    yield list_
