@@ -107,6 +107,7 @@ def get_page_ready(driver:object, base_uri:str)->None:
 def download_files(driver:object, count:int)->int:
     """"""
 
+    time.sleep(.5)
     query_button = WebDriverWait(driver, timeout=15).until(lambda x: x.find_element(by=By.XPATH, value=f'''//ion-button[@type="submit"]'''))
     query_button.click()
 
