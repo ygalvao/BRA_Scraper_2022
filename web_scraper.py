@@ -37,7 +37,15 @@ critical_error = lambda x: logging.critical(x)
 
 # Declaring functions
 def get_webdriver(headless:bool)->object:
-    """"""
+    """
+    Initializes a Firefox WebDriver with custom settings.
+    
+    Args:
+        headless (bool): Whether to run the WebDriver in headless mode.
+        
+    Returns:
+        object: Initialized Firefox WebDriver.
+    """
 
     # Declaring some important variables for the Gecko Webdriver (Firefox)
     options = Options()
@@ -60,7 +68,12 @@ def get_webdriver(headless:bool)->object:
     return driver
 
 def expand_menu(driver:object)->None:
-    """"""
+    """
+    Expands the navigation menu on the TSE page.
+    
+    Args:
+        driver (object): The WebDriver instance currently controlling the browser.
+    """
     
     try:
         nav_menu = WebDriverWait(driver, timeout=15).until(lambda x: x.find_element(by=By.XPATH, value='''//div[img[@role="presentation"]]'''))
@@ -79,7 +92,16 @@ def expand_menu(driver:object)->None:
     time.sleep(1)
 
 def get_page_ready(driver:object, base_uri:str)->None:
-    """"""
+    """
+    Prepares the web page for navigation and selection of required elements.
+
+    Args:
+        driver (object): A WebDriver object, typically an instance of Firefox WebDriver (GeckoDriver).
+        base_uri (str): The base URL of the target web page.
+
+    Returns:
+        object: A WebDriver object with the required election and type of visualization selected.
+    """
 
     ## Accessing the TSE page to download EVM files
     driver.get(base_uri)
@@ -105,7 +127,16 @@ def get_page_ready(driver:object, base_uri:str)->None:
     return driver
 
 def download_files(driver:object, count:int)->int:
-    """"""
+    """
+    Downloads the files containing RDV, BU, and Logs information from the web page.
+
+    Args:
+        driver (object): A WebDriver object, typically an instance of Firefox WebDriver (GeckoDriver).
+        count (int): The current number of downloaded files.
+
+    Returns:
+        int: An updated count of downloaded files.
+    """
 
     time.sleep(.5)
     query_button = WebDriverWait(driver, timeout=15).until(lambda x: x.find_element(by=By.XPATH, value=f'''//ion-button[@type="submit"]'''))
@@ -122,10 +153,29 @@ def download_files(driver:object, count:int)->int:
     return count
 
 def select_evm_and_download_files(driver:object, headless:bool, base_uri:str, reverse:bool)->int:
-    """"""
+    """
+    Selects the appropriate EVM options from the TSE page and download the corresponding files.
+    
+    Args:
+        driver (object): The WebDriver instance currently controlling the browser.
+        headless (bool): Whether to run the WebDriver in headless mode.
+        base_uri (str): The base URL of the TSE page.
+        reverse (bool): Whether to reverse the order of the municipalities.
+        
+    Returns:
+        int: The total number of EVM files downloaded.
+    """
 
     def find_matselect_by_form_control_name(name:str)->object:
-        """"""
+        """
+        Finds a "mat-select" element in the webpage using the "formcontrolname" attribute.
+
+        Args:
+            name (str): The "formcontrolname" attribute value of the desired "mat-select" element.
+
+        Returns:
+            object: The "mat-select" element found in the webpage.
+        """
 
         element = None
         tries = 0
@@ -148,7 +198,16 @@ def select_evm_and_download_files(driver:object, headless:bool, base_uri:str, re
                 return element
 
     def get_list_of_options(type_of_options:str, formcontrolname:str)->list:
-        """"""
+        """
+        Gets a list of options for a "mat-select" element in the webpage using the form control name attribute.
+
+        Args:
+            type_of_options (str): The type of options to be retrieved (e.g., 'municipalities').
+            formcontrolname (str): The "formcontrolname" attribute value of the desired "mat-select" element.
+
+        Returns:
+            list: A list of option elements found in the "mat-select" element.
+        """
 
         options = None
         tries = 0
@@ -179,7 +238,16 @@ def select_evm_and_download_files(driver:object, headless:bool, base_uri:str, re
                     time.sleep(1)
 
     def find_list_element(name:str, formcontrolname:str)->object:
-        """"""
+        """
+        Finds an element in a list of options for a "mat-select" element in the webpage.
+
+        Args:
+            name (str): The name of the desired option.
+            formcontrolname (str): The "formcontrolname" attribute value of the "mat-select" element containing the option.
+
+        Returns:
+            object: The option element found in the "mat-select" element.
+        """
 
         element = None
         tries = 0
@@ -308,7 +376,7 @@ def select_evm_and_download_files(driver:object, headless:bool, base_uri:str, re
     return count
 
 def start(args:list)->None:
-    """"""
+    """Main function to start the web scraper process for RDV, BU, and logs of the 2022 Federal Elections (2nd round)."""
 
     info(f'Starting the Web Scraper for RDV, BU, and Logs of the 2022 Federal Elections (2nd round), state of {scope}.\n')
 

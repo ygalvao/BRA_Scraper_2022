@@ -14,7 +14,15 @@ args = sys.argv[1:] # List of arguments that were passed
 yes_for_all = True if '--yes-for-all' in args else False
 
 def confirm(text:str)->bool:
-    ''''''
+    """
+    Asks the user to confirm an action with a yes/no prompt.
+
+    Args:
+        text (str): The text to be displayed in the confirmation prompt.
+
+    Returns:
+        bool: True if the user confirms the action, False otherwise.
+    """
 
     confirm = 'y' if yes_for_all else input(text)
     
@@ -24,7 +32,15 @@ def confirm(text:str)->bool:
         return False
 
 def check_file(file:str)->bool:
-    ''''''
+    """
+    Checks if a file exists in the current directory.
+
+    Arguments:
+        file (str): The name of the file to check.
+
+    Returns:
+        bool: True if the file exists, False otherwise.
+    """
 
     if os.path.isfile('./' + file):
         return True
@@ -32,7 +48,17 @@ def check_file(file:str)->bool:
         return False
 
 def ask_for_data(required_data:tuple, file_name_no_extension:str, ask:bool=True)->dict:
-    ''''''
+    """
+    Asks the user for input, creates a JSON configuration file, and returns the input as a dictionary.
+
+    Args:
+        required_data (tuple): The data to be collected from the user.
+        file_name_no_extension (str): The name of the configuration file without the extension.
+        ask (bool, optional): Whether to ask for user input or use default values. Defaults to True.
+
+    Returns:
+        dict: A dictionary containing the collected data.
+    """
 
     data_dict = {}
     if ask:
@@ -51,6 +77,16 @@ def ask_for_data(required_data:tuple, file_name_no_extension:str, ask:bool=True)
     return data_dict
 
 def list_from_input(text:str)->list:
+    """
+    Converts a comma-separated user input string into a list.
+
+    Arguments:
+        text (str): The text to be displayed as a prompt for user input.
+
+    Returns:
+        list: A list containing the user input as integers or strings.
+    """
+
     raw_list = input(text)
 
     try:
