@@ -13,7 +13,7 @@ from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support.select import Select
-from basic_functions_en import *
+from basic_functions import *
 
 # Declaring some important variables, like the scope (Brazilian state), the log file name, and the basic configuration for the log system
 scope = args[args.index('--scope') + 1] if '--scope' in args else input('Please, enter the name of the state for this instance of the web scraper (e.g. Rio de Janeiro): ').strip()
