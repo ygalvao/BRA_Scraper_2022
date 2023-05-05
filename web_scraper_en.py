@@ -16,10 +16,10 @@ from selenium.webdriver.support.select import Select
 from basic_functions_en import *
 
 # Declaring some important variables, like the scope (Brazilian state), the log file name, and the basic configuration for the log system
-scope = input('Please, enter the name of the state for this instance of the web scraper (e.g. Rio de Janeiro): ').strip()
+scope = args[args.index('--scope') + 1] if '--scope' in args else input('Please, enter the name of the state for this instance of the web scraper (e.g. Rio de Janeiro): ').strip()
 log_file_name = scope
 
-if confirm('Do you want to customize the name of the log file? [y/n] '):
+if not confirm('Do you want the name of the log file to be the same as the state name? [y/n] '):
     log_file_name = input('Enter the name for the log file, without the extension: ')
 
 log_file_name = log_file_name.replace(' ', '_') + '.log'
@@ -121,7 +121,7 @@ def download_files(driver:object, count:int)->int:
 
     return count
 
-def select_evm_and_download_files(driver:object, headless:bool, base_uri:str, revert:bool)->int:
+def select_evm_and_download_files(driver:object, headless:bool, base_uri:str, reverse:bool)->int:
     """"""
 
     def find_matselect_by_form_control_name(name:str)->object:
@@ -230,7 +230,7 @@ def select_evm_and_download_files(driver:object, headless:bool, base_uri:str, re
     with generator(get_list_of_options('municipalities', 'municipioBU')) as municipalities:
         municipalities_length = len(municipalities)
         municipalities = [municipality.text for municipality in municipalities]
-        if revert:
+        if reverse:
             municipalities.reverse()
 
         for i_m, municipality in enumerate(municipalities):
@@ -307,7 +307,7 @@ def select_evm_and_download_files(driver:object, headless:bool, base_uri:str, re
 
     return count
 
-def start()->None:
+def start(args:list)->None:
     """"""
 
     info(f'Starting the Web Scraper for RDV, BU, and Logs of the 2022 Federal Elections (2nd round), state of {scope}.\n')
@@ -315,17 +315,17 @@ def start()->None:
     # Declaring other variables and instantiating objects
     base_uri = 'https://resultados.tse.jus.br/oficial/app/index.html#/divulga;e=545'
 
-    headless = confirm('Do you want the browser to be "headless"? [y/n] ')
-    revert = confirm('Do you want to reverse the order of the municipalities? [y/n] ')
+    headless = False if '--show-browser' in args else True if '--headless' in args else confirm('Do you want the browser to be headless (i.e., you won\'t see it)? [y/n] ')
+    reverse = True if '--reverse' in args else not confirm('Do you want to keep the given order of municipalities (if not, it will be reversed)? [y/n] ')
 
     driver = get_page_ready(get_webdriver(headless), base_uri)
 
     time.sleep(2)
 
-    downloaded_total = select_evm_and_download_files(driver, headless, base_uri, revert)
+    downloaded_total = select_evm_and_download_files(driver, headless, base_uri, reverse)
 
     info(f'''Download complete! Files from {downloaded_total} EVM's from {scope} were downloaded.''')
     info('End of the program. The web scraper will now close.')
 
 if __name__ == '__main__':
-    start()
+    start(args)
