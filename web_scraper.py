@@ -49,10 +49,9 @@ def get_webdriver(headless:bool)->object:
 
     # Declaring some important variables for the Gecko Webdriver (Firefox)
     options = Options()
-    #linux_useragent = "Mozilla/5.0  (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36"
     options.set_preference("browser.download.folderList", 2)
     options.set_preference("browser.download.manager.showWhenStarting", False)
-    options.set_preference("browser.download.dir", "/home/yhgalvao/Desktop/AI/Notebooks/Brazil_2022_Elections/formato-arquivos-bu-rdv-ass-digital/BU_e_RDV")
+    #options.set_preference("browser.download.dir", "/home/.") # Uncomment this and change the path in it if you want to define a specif folder for the downloaded files
     options.set_preference("browser.helperApps.neverAsk.saveToDisk", "application/x-gzip")
     options.add_argument('disable-infobars')
     options.add_argument('--disable-extensions')
